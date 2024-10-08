@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- High level launch file for Unit 5 Exercise -->
+<!-- Requires simulation w/robot running -->
+<launch>
+
+  <arg name="run_gradient_descent" default="false" doc="true or false"/>
+
+  <arg name="map_file" default="$(find unit5)/maps/map_unit5_74x74x20cm.yaml"/>
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+
+  <group if="$(arg run_gradient_descent)">
+     <include file="$(find unit5)/launch/move_base.launch">
+        <arg name="start_pp_plugin" value="true" />
+     </include>
+
+     <node pkg="unit5" name="unit5_gradient_descent_server" type="unit5_pp_server.py" output="screen" required="true"/>
+  </group>
+
+  <group unless="$(arg run_gradient_descent)">
+     <include file="$(find unit5)/launch/move_base.launch"/>
+  </group>
+
+  <arg name="use_rviz" default="true" />
+  <arg name="rvizconfig" default="$(find unit5)/rviz/unit5_exercise.rviz"/>
+  <node if="$(arg use_rviz)" name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(arg rvizconfig)"/>
+
+  <node pkg="unit5" name="unit5_exercise" type="unit5_exercise.py" output="screen" required="true"/>
+
+  <arg name="topic_attractive_field" default="/attractive_field" />
+  <node pkg="unit5" name="occ_to_gridmap_attractive" type="costmap_to_gridmap" output="screen">
+  <remap from="/input_topic/costmap" to="$(arg topic_attractive_field)" />
+  </node>
+
+  <arg name="topic_repulsive_field" default="/repulsive_field" />
+  <node pkg="unit5" name="occ_to_gridmap_repulsive" type="costmap_to_gridmap" output="screen">
+  <remap from="/input_topic/costmap" to="$(arg topic_repulsive_field)" />
+  </node>
+
+  <arg name="topic_total_field" default="/total_field" />
+  <node pkg="unit5" name="occ_to_gridmap_total" type="costmap_to_gridmap" output="screen">
+  <remap from="/input_topic/costmap" to="$(arg topic_total_field)" />
+  </node>
+
+
+</launch>

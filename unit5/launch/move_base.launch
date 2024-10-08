@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!-- Starts move_base (navigation stack) and loads the proper config files -->
+
+<launch>
+  <arg name="start_pp_plugin" default="false" doc="true or false"/>
+  <!-- Specify the name of the sensor data and command topics (can be overridden on the command line) -->
+  <arg name="scan_topic" default="/kobuki/laser/scan"/>
+  <arg if="$(arg start_pp_plugin)" name="cmd_vel_topic" default="/cmd_vel"/>
+  <arg unless="$(arg start_pp_plugin)" name="cmd_vel_topic" default="/unused_cmd_vel"/>
+  <arg name="odom_topic" default="/odom"/>
+ 
+  <arg name="base_local_planner" default="dwa_local_planner/DWAPlannerROS"/>
+  <arg if="$(arg start_pp_plugin)" name="base_global_planner" default="srv_client_plugin/SrvClientPlugin"/>
+  <arg unless="$(arg start_pp_plugin)" name="base_global_planner" default="navfn/NavfnROS"/>
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find unit5)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find unit5)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find unit5)/config/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find unit5)/config/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find unit5)/config/dwa_local_planner_params.yaml" command="load" />
+
+    <rosparam file="$(find unit5)/config/move_base_params.yaml" command="load" />
+    <rosparam file="$(find unit5)/config/global_planner_params.yaml" command="load" />
+    <rosparam file="$(find unit5)/config/navfn_global_planner_params.yaml" command="load" />
+
+    <remap from="cmd_vel" to="$(arg cmd_vel_topic)"/>
+    <remap from="odom" to="$(arg odom_topic)"/>
+    <remap from="scan" to="$(arg scan_topic)"/>
+    
+    <param name="base_global_planner" value="$(arg base_global_planner)"/>
+    <param name="base_local_planner" value="$(arg base_local_planner)"/>  
+    
+  </node>
+</launch>
