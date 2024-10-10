@@ -277,8 +277,8 @@ bool DijkstraGlobalPlanner::dijkstraShortestPath(
   bool path_found = false;
 
   // empty data container that will store nodes and associated g_costs
-  //std::vector<std::pair<int, double>> open_list;
-  std::list<std::pair<int, double>> open_list;
+  std::vector<std::pair<int, double>> open_list;
+
   // empty set to keep track of already visited/closed nodes
   std::unordered_set<int> closed_list;
 
@@ -299,25 +299,20 @@ bool DijkstraGlobalPlanner::dijkstraShortestPath(
 
   RCLCPP_INFO(node_->get_logger(), "Dijkstra: Done with initialization");
   RCLCPP_INFO(node_->get_logger(), "Dijkstra: start index %d, goal index %d, costmap len %ld",start_cell_index, goal_cell_index,costmap_flat.size());
-//   for(auto i : costmap_flat){
-//   RCLCPP_INFO(node_->get_logger(), "Dijkstra: costmap_flat %d",i);
-//   }
+
 
   /** YOUR CODE STARTS HERE */
   while(!open_list.empty()){
 
-    // sort open_list according to the lowest 'g_cost' value (second element of each sublist)
-    // std::sort(open_list.begin(), open_list.end(), [](const std::pair<int, double>& a, const std::pair<int, double>& b){
-    //      return a.second > b.second;
-    // });
-    open_list.sort([](const std::pair<int, double>& a, const std::pair<int, double>& b){
+    //sort open_list according to the lowest 'g_cost' value (second element of each sublist)
+    std::sort(open_list.begin(), open_list.end(), [](const std::pair<int, double>& a, const std::pair<int, double>& b){
          return a.second < b.second;
     });
 
+
     // extract the first element (the one with the lowest 'g_cost' value)
     std::pair<int, double> current_node = open_list.front();
-    //open_list.erase(open_list.begin());
-    open_list.pop_front();
+    open_list.erase(open_list.begin());
     RCLCPP_INFO(node_->get_logger(),"Dijkstra: working on index %d, open_list size %ld", current_node.first,open_list.size());
 
     // Close current_node to prevent from visting it again
@@ -370,9 +365,7 @@ bool DijkstraGlobalPlanner::dijkstraShortestPath(
           g_costs[neighbor_index] = g_cost;
           parents[neighbor_index] = current_node.first;
           // Update the node's g_cost inside open_list
-          //open_list[idx] = std::make_pair(neighbor_index, g_cost);
-          auto open_list_front = open_list.begin();
-          std::advance(open_list_front, idx);
+          open_list[idx] = std::make_pair(neighbor_index, g_cost);
         }
       // CASE 2: neighbor not in open_list
       }else{
@@ -392,7 +385,6 @@ bool DijkstraGlobalPlanner::dijkstraShortestPath(
   if(!path_found){
     RCLCPP_INFO(node_->get_logger(),"Dijkstra: No path found!");
     return false;
-    //return shortest_path
   }else{
       int node = goal_cell_index;
       shortest_path.push_back(goal_cell_index);
@@ -445,6 +437,11 @@ void DijkstraGlobalPlanner::fromGridToWorld(float &x, float &y) {
 }
 
 } // namespace nav2_dijkstra_planner
+
+#include "pluginlib/class_list_macros.hpp"
+PLUGINLIB_EXPORT_CLASS(nav2_dijkstra_planner::DijkstraGlobalPlanner,
+                       nav2_core::GlobalPlanner)
+
 
 #include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(nav2_dijkstra_planner::DijkstraGlobalPlanner,
